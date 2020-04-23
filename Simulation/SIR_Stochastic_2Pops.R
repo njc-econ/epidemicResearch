@@ -124,6 +124,7 @@ simulationSIR_manyPops <- function(parameterList, maxPeriods = 1500){
   return(simResults)
 }
 
+library(data.table)
 simulationResults <- simulationSIR_manyPops(parameterList)
 
 library(ggplot2)
