@@ -37,3 +37,6 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# all excel data on weekly deaths
+/Corona/UK/WeeklyDeaths/*.xl*
