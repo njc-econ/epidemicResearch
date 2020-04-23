@@ -40,3 +40,5 @@ vignettes/*.pdf
 
 # all excel data on weekly deaths
 /Corona/UK/WeeklyDeaths/*.xl*
+*.xl*
+*.png
