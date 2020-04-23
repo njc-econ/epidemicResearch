@@ -17,7 +17,7 @@ excelLinks <- c(
 
 for (i in c(2010:2020)){
   if (i <= 2019){type <- ".xls"} else {type <- ".xlsx"}
-  download.file(excelLinks[i-2009], file.path(getwd(),paste0("WeeklyDeaths",i,type)))
+  download.file(excelLinks[i-2009], file.path(getwd(),"Corona","UK","WeeklyDeaths",paste0("WeeklyDeaths",i,type)))
 }
 
 library(data.table)
@@ -30,7 +30,7 @@ for (i in c(2010:2020)){
     sheetname <- "Weekly Figures "
   } else {sheetname <- "Weekly figures "}
   
-  data[[i - 2009]] <- data.table(read_excel(file.path(getwd(),paste0("WeeklyDeaths",i,type)), sheet = paste0(sheetname, i), skip=2))
+  data[[i - 2009]] <- data.table(read_excel(file.path(getwd(),"Corona","UK","WeeklyDeaths",paste0("WeeklyDeaths",i,type)), sheet = paste0(sheetname, i), skip=2))
 } 
 
 rm(i,type, sheetname)
@@ -71,12 +71,20 @@ set(deathsByWeek_dt, which(is.na(deathsByWeek_dt$endMarchStartApril)),"endMarchS
 
 library(ggplot2)
 
-ggplot(deathsByWeek_dt, aes(x = WeekEnded, y = NoDeaths, size=endMarchStartApril, shape=endMarchStartApril, col=endMarchStartApril)) + geom_point(aes(group=1)) +
-  xlab("Week End Date") + ylab("No. of Deaths") + labs(title = "No. of Deaths by Week 2010-2020, England & Wales") + 
-  scale_shape_manual(values=c(15,16))+
-  scale_size_manual(values = c(2,4))+
-  scale_color_manual(values = c("red","black"))+
-  coord_cartesian(xlim = c(as.Date("2010-01-01"),as.Date("2020-12-31")), # This focuses the x-axis on the range of interest
-                  clip = 'off')+
-  theme_minimal() + annotate("text",label="Source: ONS",x=as.Date("2022-03-01"),y=5000)# + geom_line(aes(group=1))
 
+weeklyDeathsPlot <- ggplot(deathsByWeek_dt, aes(x = WeekEnded, y = NoDeaths, size=endMarchStartApril, shape=endMarchStartApril, col=endMarchStartApril)) + geom_point(aes(group=1)) +
+  xlab("Week End Date") + ylab("No. of Deaths") + labs(title = "No. of Deaths by Week 2010-2020, England & Wales") + 
+  scale_shape_manual(values=c(15,16), labels=c("Any Other Time","15th Mar - 14th Apr"))+
+  scale_size_manual(values = c(1,1.5), labels=c("Any Other Time","15th Mar - 14th Apr"))+
+  scale_color_manual(values = c("red","black"), labels=c("Any Other Time","15th Mar - 14th Apr"))+
+  coord_cartesian(xlim = c(as.Date("2010-01-01"),as.Date("2020-12-31")), # This focuses the x-axis on the range of interest
+                  ylim = c(6000, 18000),
+                  clip = 'off')+
+  annotate("text",label="Source: ONS",x=as.Date("2023-03-01"),y=5500, size = 1)+
+  theme_minimal(base_size = 4) +
+  theme(legend.spacing.y = unit(0.1,"in"),
+        legend.key.size = unit(0.1, "in"))  +
+  guides(shape=guide_legend(title = "", reverse = TRUE),size=guide_legend(title = "", reverse = TRUE), color = guide_legend(title = "", reverse = TRUE))
+
+ggsave("weeklyDeathsEngWales.png", units = "in", dpi = 300, width = 1200/300, height=630/300)
+  
