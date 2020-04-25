@@ -17,7 +17,9 @@ excelLinks <- c(
 
 for (i in c(2010:2020)){
   if (i <= 2019){type <- ".xls"} else {type <- ".xlsx"}
-  download.file(excelLinks[i-2009], file.path(getwd(),"Corona","UK","WeeklyDeaths",paste0("WeeklyDeaths",i,type)))
+  if (!file.exists(file.path(getwd(),"Corona","UK","WeeklyDeaths",paste0("WeeklyDeaths",i,type))) | i == 2020){
+    download.file(excelLinks[i-2009], file.path(getwd(),"Corona","UK","WeeklyDeaths",paste0("WeeklyDeaths",i,type)))
+  }
 }
 
 library(data.table)
