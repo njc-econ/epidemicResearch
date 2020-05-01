@@ -11,7 +11,7 @@ excelLinks <- c(
   wd2017 = "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2017/publishedweek522017.xls",
   wd2018 = "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2018/publishedweek522018withupdatedrespiratoryrow.xls",
   wd2019 = "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2019/publishedweek522019.xls",
-  wd2020 = "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek152020corrected.xlsx"
+  wd2020 = "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek1620201.xlsx"
 )
 
 
@@ -67,7 +67,7 @@ deathsByWeek_dt[ , WeekEnded := as.Date(WeekEnded, origin = "1899-12-30")]
 
 # create an indicator for weeks at the end of March and start of April
 deathsByWeek_dt[(as.numeric(format(WeekEnded,"%d"))>15 & as.numeric(format(WeekEnded,"%m"))==3)|
-                  (as.numeric(format(WeekEnded,"%d"))<=15 & as.numeric(format(WeekEnded,"%m"))==4),
+                  (as.numeric(format(WeekEnded,"%d"))<=22 & as.numeric(format(WeekEnded,"%m"))==4),
                 endMarchStartApril := TRUE]
 set(deathsByWeek_dt, which(is.na(deathsByWeek_dt$endMarchStartApril)),"endMarchStartApril",FALSE)
 
@@ -76,11 +76,11 @@ library(ggplot2)
 
 weeklyDeathsPlot <- ggplot(deathsByWeek_dt, aes(x = WeekEnded, y = NoDeaths, size=endMarchStartApril, shape=endMarchStartApril, col=endMarchStartApril)) + geom_point(aes(group=1)) +
   xlab("Week End Date") + ylab("No. of Deaths") + labs(title = "No. of Deaths by Week 2010-2020, England & Wales") + 
-  scale_shape_manual(values=c(15,16), labels=c("Any Other Time","15th Mar - 14th Apr"))+
-  scale_size_manual(values = c(1,1.5), labels=c("Any Other Time","15th Mar - 14th Apr"))+
-  scale_color_manual(values = c("red","black"), labels=c("Any Other Time","15th Mar - 14th Apr"))+
+  scale_shape_manual(values=c(15,16), labels=c("Any Other Time","15th Mar - 22nd Apr"))+
+  scale_size_manual(values = c(1,1.5), labels=c("Any Other Time","15th Mar - 22nd Apr"))+
+  scale_color_manual(values = c("red","black"), labels=c("Any Other Time","15th Mar - 22nd Apr"))+
   coord_cartesian(xlim = c(as.Date("2010-01-01"),as.Date("2020-12-31")), # This focuses the x-axis on the range of interest
-                  ylim = c(6000, 18000),
+                  ylim = c(6000, max(deathsByWeek_dt$NoDeaths)*1.05),
                   clip = 'off')+
   annotate("text",label="Source: ONS",x=as.Date("2023-03-01"),y=5500, size = 1)+
   theme_minimal(base_size = 4) +
@@ -88,5 +88,5 @@ weeklyDeathsPlot <- ggplot(deathsByWeek_dt, aes(x = WeekEnded, y = NoDeaths, siz
         legend.key.size = unit(0.1, "in"))  +
   guides(shape=guide_legend(title = "", reverse = TRUE),size=guide_legend(title = "", reverse = TRUE), color = guide_legend(title = "", reverse = TRUE))
 
-ggsave("weeklyDeathsEngWales.png", units = "in", dpi = 300, width = 1200/300, height=630/300)
+ggsave(paste0("weeklyDeathsEngWales",format(Sys.Date(),"%Y_%m_%d"),".png"), units = "in", dpi = 300, width = 1200/300, height=630/300)
   
