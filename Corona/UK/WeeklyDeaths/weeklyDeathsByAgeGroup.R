@@ -91,6 +91,7 @@ data2010_2019[,':='(Persons = as.integer(Persons),
                     Males = as.integer(Males),
                     Females = as.integer(Females))]
 
+ageCategoriesOld <- ageCategories
 ageCategories <- c("<1", "1-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39",
                        "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79",
                        "80-84", "85-89", "90+")
@@ -127,15 +128,35 @@ compareWeeks <- data2010_2019[ ,.(maxPersons=max(Persons),
 library(ggplot2)
 
 compareWeeksLong <- melt(compareWeeks, id.vars=c("WeekNo","AgeGroup"))
+data2020_long <- melt(data2020_comparable[,-c("WeekEnded")], id.vars = c("WeekNo", "AgeGroup"))
 
+plotData <- rbindlist(list(compareWeeksLong, data2020_long))
 # get three week moving averages of deaths every year
 # summarise those 3 month series with mean max and min for the past 10 years
 
 # plot against the same series for 2020
 
+ageGroupGraphs <- list()
+for (i in 1:length(ageCategoriesOld)){
+  ageGroupGraphs[[i]] <- ggplot(plotData[WeekNo <= 52 & AgeGroup == ageCategoriesOld[i] & variable %in%c("maxPersons","minPersons","meanPersons","Persons")], aes(x=WeekNo, y=value, linetype = variable, color=variable)) +
+    xlab("Week of Year") + ylab("No. of Deaths") + labs(title = ageCategoriesOld[i])+
+  geom_line() + theme_minimal(base_size = 6) +
+    scale_linetype_manual(values = c("dotted", "dashed", "solid", "solid"), labels = c("Max 2010-2019", "Min 2010-2019", "Ave 2010-2019", "2020")) +
+    scale_color_manual(values = c("black", "black", "black", "red"), labels = c("Max 2010-2019", "Min 2010-2019", "Ave 2010-2019", "2020"))  +
+    guides(linetype=guide_legend(title = "", reverse = TRUE), color = guide_legend(title = "", reverse = TRUE)) +
+    theme(legend.spacing.y = unit(0.1,"in"),
+    legend.key.size = unit(0.1, "in"))
+}
+
+library(gridExtra)
+
+ml <- marrangeGrob(ageGroupGraphs, nrow = 4, ncol= 2, top = "Deaths by Week of Year in England & Wales,\n split by Age Group", layout_matrix = matrix(seq_len(8), nrow=4, ncol=2, byrow = TRUE))
+ggsave(paste0("weeklyDeathsByAgeEngWales",format(Sys.Date(),"%Y_%m_%d"),".png"),ml, units = "in", dpi = 300, width = (1200*2)/300, height=(630*4)/300)
 
 
-
-
-ggplot(compareWeeksLong[AgeGroup == "65-74" & variable %in%c("maxPersons","minPersons","meanPersons")], aes(x=WeekNo, y=value, linetype = variable)) +
-  geom_line()
+ggplot(plotData[WeekNo <= 52 & AgeGroup == "65-74" & variable %in%c("maxPersons","minPersons","meanPersons","Persons")], aes(x=WeekNo, y=value, linetype = variable, color=variable)) +
+  xlab("Week of Year") + ylab("No. of Deaths") + labs(title = "65-74")+
+  geom_line() + theme_minimal(base_size = 4) +
+  scale_linetype_manual(values = c("dotted", "dashed", "solid", "solid"), labels = c("Max 2010-2019", "Min 2010-2019", "Ave 2010-2019", "2020")) +
+  scale_color_manual(values = c("black", "black", "black", "red"), labels = c("Max 2010-2019", "Min 2010-2019", "Ave 2010-2019", "2020"))  +
+  guides(linetype=guide_legend(title = "", reverse = TRUE), color = guide_legend(title = "", reverse = TRUE))
