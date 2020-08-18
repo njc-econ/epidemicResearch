@@ -43,25 +43,14 @@ weekLookup <- data.table(Day=seq.Date(from = as.Date("2016-01-02"), to = lastDay
 germanDeathsByWeek <- merge(germanDeathsByDay, weekLookup, by.x = "Date", by.y = "Day")
 germanDeathsByWeek <- germanDeathsByWeek[,.(Deaths = sum(Deaths, na.rm = TRUE)), keyby = .(`unter … Jahren`, WeekEnd)]
 
-germanDeathsByWeek[(as.numeric(format(WeekEnd,"%d"))>15 & as.numeric(format(WeekEnd,"%m"))==3)|
-                  (as.numeric(format(WeekEnd,"%d"))<=22 & as.numeric(format(WeekEnd,"%m"))==4),
-                endMarchStartApril := TRUE]
-set(germanDeathsByWeek, which(is.na(germanDeathsByWeek$endMarchStartApril)),"endMarchStartApril",FALSE)
+# assign a number to each week in the year
+weeks <- germanDeathsByWeek[,.(weeks=unique(WeekEnd)),keyby=year(WeekEnd)][,':='(WeekNo=c(1:.N)),by=year(weeks)]
 
-weeklyDeathsPlotGermany <- ggplot(germanDeathsByWeek[`unter … Jahren`=="Insgesamt"], aes(x = WeekEnd, y = Deaths, size=endMarchStartApril, shape=endMarchStartApril, col=endMarchStartApril)) + geom_point(aes(group=1)) +
-  xlab("Week End Date") + ylab("No. of Deaths") + labs(title = "No. of Deaths by Week 2016-2020, Germany") + 
-  scale_shape_manual(values=c(15,16), labels=c("Any Other Time","15th Mar - 22nd Apr"))+
-  scale_size_manual(values = c(1,1.5), labels=c("Any Other Time","15th Mar - 22nd Apr"))+
-  scale_color_manual(values = c("red","black"), labels=c("Any Other Time","15th Mar - 22nd Apr"))+
-  coord_cartesian(xlim = c(as.Date("2016-01-01"),as.Date("2020-12-31")), # This focuses the x-axis on the range of interest
-                  ylim = c(15000, max(germanDeathsByWeek$Deaths)*1.05),
-                  clip = 'off')+
-  annotate("text",label="Source: Destatis",x=as.Date("2021-03-01"),y=14500, size = 1)+
-  theme_minimal(base_size = 4) +
-  theme(legend.spacing.y = unit(0.1,"in"),
-        legend.key.size = unit(0.1, "in"))  +
-  guides(shape=guide_legend(title = "", reverse = TRUE),size=guide_legend(title = "", reverse = TRUE), color = guide_legend(title = "", reverse = TRUE))
+germanDeathsByWeek <- merge(germanDeathsByWeek,weeks, by.x="WeekEnd", by.y = "weeks", all.x=TRUE)
 
-ggsave(paste0("weeklyDeathsGermany",format(Sys.Date(),"%Y_%m_%d"),".png"), weeklyDeathsPlotGermany, units = "in", dpi = 300, width = 1200/300, height=630/300)
+averageDeaths2016_2019 <- germanDeathsByWeek[year < 2020,.(MaxDeaths = max(Deaths),
+                                 MinDeaths = min(Deaths),
+                                 AveDeaths = mean(Deaths)),
+                   keyby=.(`unter … Jahren`,WeekNo)]
 
-
+comparisonData <- merge(averageDeaths2016_2019, germanDeathsByWeek[year == 2020, .(`unter … Jahren`, Deaths2020 = Deaths, WeekNo)],by=c("unter … Jahren", "WeekNo"), all.x = TRUE)
